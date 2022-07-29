@@ -11,14 +11,13 @@
 </head>
 <body>
     <div style="margin-top: 10%;">
-        <form>
+        <form action="/" method="GET">
             <div style="margin-left: 25%; width: 50%;">
                 <div class="main-title"> ERROR</div>
-                <div>Erro ao enviar requisição para:</div>
-                <div class="desc"> <%= error.path %></div>
+                <div class="">Ocorreu um erro ao tentar realizar as chamadas de api</div>
                 </br>
-                <div>Verifique as chaves e o id da planilha para tentar novamente!</div>
-                <button href="/">Voltar</button>
+                <div class="desc">Verifique as chaves e o id da planilha e tente novamente!</div>
+                <button>Voltar</button>
             </div>
         </form>
     </div>
