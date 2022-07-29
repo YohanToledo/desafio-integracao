@@ -6,15 +6,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Tiro+Devanagari+Hindi:ital@1&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Arimo&family=Tiro+Devanagari+Hindi:ital@1&display=swap" rel="stylesheet">
     <title>Desafio Integração</title>
 </head>
 <body>
     <div style="margin-top: 10%;">
         <form action="/" method="post">
             <div style="margin-left: 25%; width: 50%;">
-            <div style="margin-left: 20%;">Integração GoogleSheets com HubSpot</div>
-            <button>Criar contatos</button>
+            <div class="main-title">Integração GoogleSheets com HubSpot</div>
+            <div class="desc">Plataforma de integração entre <a href="https://developers.google.com/sheets/api">googlesheets</a> e o crm <a href="https://br.hubspot.com/">hubspot</a></div>
+
+            <div class="row">
+                <label>Google API Key</label>
+            </div>
+                <div class="row">
+                <input type="text" name="googleKey"/>
+            </div>
+           
+            <div class="row">
+                <label>Google spreadsheet ID</label>
+            </div>
+                <div class="row">
+                <input type="text" name="spreadsheet"/>
+            </div>
+            
+            <div class="row">
+                <label>Hubspot API Token</label>
+            </div>
+                <div class="row">
+                <input type="text" name="hubspotToken" />
+            </div>
+           
+            <button type="submit" >Criar contatos</button>
             </div>
         </form>
     </div>
@@ -22,12 +45,34 @@
 
 <style>
 body{
-    font-family: 'Anton', sans-serif;
+    font-family: 'Arimo', sans-serif;
     font-size: 30px;
+    background-color: #1b1f23;
+}
+
+form{
+    color: white;
+}
+
+.main-title{
+    margin: 0 15px 15px 0;
+    font-size: 40px;
+}
+
+.desc{
+    font-size: 20px;
+}
+
+a{
+    color: rgb(37, 147, 184);
+}
+
+label{
+    font-size: 20px;
 }
 
 button{
-    margin-left: 35%;
+    margin-top: 20px;
     background-color: rgb(71, 92, 209);
     color: white;
     width: 180px;
@@ -42,6 +87,22 @@ button:hover{
     box-shadow: 5px 5px solid black;
     margin-bottom: 5px;
 }
+
+input{
+    border: none;
+    border-radius: 2px;
+    height: 20px;
+    width: 260px;
+    padding: 6px 10px;
+    
+}
+
+input:focus{
+    border: none;
+    box-shadow: none;
+    outline: none;
+}
+
 </style>
 
 </html>

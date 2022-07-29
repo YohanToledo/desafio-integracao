@@ -8,6 +8,8 @@ router.get('/', async function (req, res, next) {
 });
 
 router.post('/', function(req, res, next){
+    console.log(req.body);
+    //res.redirect("/");
     requests.getSpreadsheetValues(req, res);
 })
 

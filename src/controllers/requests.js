@@ -2,14 +2,21 @@ const { default: axios } = require("axios");
 require('dotenv').config();
 const { GOOGLE_BASE_URL } = require("../utils/baseUrl");
 
+var google_key = "";
+var sheet_id = "";
+var hub_token = "";
+
 getSpreadsheetValues = async function(req, res){
-    let range = "A1:E20";
-    var spreadsheetId = process.env.SPREADSHEET_ID;
-    var key = process.env.GOOGLE_API_KEY;
+    let range = "A1:E50";
+    sheet_id = req.body.spreadsheet; //process.env.SPREADSHEET_ID;
+    google_key = req.body.googleKey; //process.env.GOOGLE_API_KEY;
+    hub_token = req.body.hubspotToken;
     var contacts = [];
 
+    console.log();
+
     
-    await axios.get(`${GOOGLE_BASE_URL}/v4/spreadsheets/${spreadsheetId}/values/${range}?key=${key}`).then(response => {
+    await axios.get(`${GOOGLE_BASE_URL}/v4/spreadsheets/${sheet_id}/values/${range}?key=${google_key}`).then(response => {
         var contactList = response.data.values;
         for(var i = 0; i < contactList.length; i++){
             var names = splitName(contactList[i][1]);
@@ -53,7 +60,8 @@ createHubspotContacts = async function (list){
 
 sendHubspotContact = function (contact){
 
-    var token = process.env.HUBSPOT_TOKEN;
+    var token = hub_token; //process.env.HUBSPOT_TOKEN;
+    console.log(token);
 
     const config = {
         baseURL: "https://api.hubapi.com",
