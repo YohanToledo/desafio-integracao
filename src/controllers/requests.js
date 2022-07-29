@@ -8,6 +8,11 @@ var hub_token = "";
 
 getSpreadsheetValues = async function(req, res){
     let range = "A1:E50";
+
+    if (req.body.googleKey === '' || req.body.spreadsheet === '' || req.body.hubspotToken === ''){
+        res.redirect("/");
+        return;
+    }
     sheet_id = req.body.spreadsheet; //process.env.SPREADSHEET_ID;
     google_key = req.body.googleKey; //process.env.GOOGLE_API_KEY;
     hub_token = req.body.hubspotToken;
@@ -36,19 +41,22 @@ getSpreadsheetValues = async function(req, res){
             }
             
         }
-        //console.log(contacts)
         
+        
+        createHubspotContacts(contacts);
+        res.status(200).redirect("/success");
+
     }).catch(function (error) {
         if (error.request) {
-            console.log(error.request);
+            console.log(error.request.response);
+            res.status(400).render('error',{
+                error: error.request
+            });
         }
+        return
     });
 
-    createHubspotContacts(contacts);
-
-    res.status(200).send({
-        contacts: contacts
-    });
+    
     
 };
 
@@ -61,7 +69,6 @@ createHubspotContacts = async function (list){
 sendHubspotContact = function (contact){
 
     var token = hub_token; //process.env.HUBSPOT_TOKEN;
-    console.log(token);
 
     const config = {
         baseURL: "https://api.hubapi.com",
