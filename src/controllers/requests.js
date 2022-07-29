@@ -2,7 +2,7 @@ const { default: axios } = require("axios");
 require('dotenv').config();
 const { GOOGLE_BASE_URL } = require("../utils/baseUrl");
 
-module.exports.getSpreadsheetValues = async function(req, res){
+getSpreadsheetValues = async function(req, res){
     let range = "A1:E20";
     var spreadsheetId = process.env.SPREADSHEET_ID;
     var key = process.env.GOOGLE_API_KEY;
@@ -12,13 +12,22 @@ module.exports.getSpreadsheetValues = async function(req, res){
     await axios.get(`${GOOGLE_BASE_URL}/v4/spreadsheets/${spreadsheetId}/values/${range}?key=${key}`).then(response => {
         var contactList = response.data.values;
         for(var i = 0; i < contactList.length; i++){
-            contacts.push({
-                'empresa': contactList[i][0],
-                'nome': contactList[i][1],
-                'email': contactList[i][2],
-                'tel': contactList[i][3],
-                'site': contactList[i][4]
-            });
+            var names = splitName(contactList[i][1]);
+            var email = contactList[i][2];
+            if(isValidEmailDomain(email)){
+                contacts.push({
+                    'company': contactList[i][0],
+                    'email': email,
+                    'firstname': names[0],
+                    'lastname': names[1],
+                    'phone': contactList[i][3],
+                    'website': contactList[i][4]
+                });
+            }
+            else{
+                console.log("O contato presente na linha " + (i+1) + " nao possui um email corportativo");
+            }
+            
         }
         //console.log(contacts)
         
@@ -28,27 +37,21 @@ module.exports.getSpreadsheetValues = async function(req, res){
         }
     });
 
+    createHubspotContacts(contacts);
+
     res.status(200).send({
         contacts: contacts
     });
     
 };
 
-
-
-/*
-contact: {
-    company: "Biglytics",
-    email: "bcooper@biglytics.net",
-    firstname: "Bryan",
-    lastname: "Cooper",
-    phone: "(877) 929-0687",
-    website: "biglytics.net"
+createHubspotContacts = async function (list){
+    for(var i = 0; i < list.length; i++){
+        await sendHubspotContact(list[i]);
+    }
 }
 
-*/
-
-module.exports.sendHubspotContact = function (contact){
+sendHubspotContact = function (contact){
 
     var token = process.env.HUBSPOT_TOKEN;
 
@@ -57,14 +60,7 @@ module.exports.sendHubspotContact = function (contact){
         method: 'POST',
         url: '/crm/v3/objects/contacts',
         data: {
-            properties: {
-                company: "Biglytics",
-                email: "bcooper@biglytics.net",
-                firstname: "Bryan",
-                lastname: "Cooper",
-                phone: "(877) 929-0687",
-                website: "biglytics.net"
-            }
+            properties: contact
         },
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -73,22 +69,24 @@ module.exports.sendHubspotContact = function (contact){
     } 
     
     axios(config).then(response => {
-        console.log(response);
+        if(response.status === 201){
+            console.log("Contato criado com sucesso!");
+            console.log(contact);
+        }
+    }).catch(error => {
+        if (error.response.status === 409){
+            console.log("Contato já existe!");
+            console.log(contact);
+        }
+        else{
+            console.log("Ocorreu um erro inesperado!");
+            console.log("Response status=" + error.response.status);
+            console.log(error.response.statusText);
+        }
     })
 }
 
-function parseContact(list){
-    var contacts = [];
-    for(var i = 0; i < list.length; i++){
-        contacts.push({
-            'empresa': list[i][0],
-            'nome': list[i][1],
-            'email': list[i][2],
-            'tel': list[i][3],
-            'site': list[i][4]
-        });
-    }
-}
+
 
 
 function splitName(name) { 
@@ -109,5 +107,10 @@ function isValidEmailDomain(email){
     }
 }
 
-module.exports = { splitName, isValidEmailDomain };
+module.exports = { 
+    splitName, 
+    isValidEmailDomain,
+    getSpreadsheetValues,
+    sendHubspotContact
+};
 
