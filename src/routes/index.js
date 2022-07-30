@@ -17,8 +17,7 @@ router.get('/success', function (req, res, next) {
 
 
 router.post('/', function(req, res, next){
-    console.log(req.body);
-    //res.redirect("/");
+    //console.log(req.body);
     requests.getSpreadsheetValues(req, res);
 });
 

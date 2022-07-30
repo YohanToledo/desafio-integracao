@@ -1,6 +1,6 @@
 const { default: axios } = require("axios");
 require('dotenv').config();
-const { GOOGLE_BASE_URL } = require("../utils/baseUrl");
+const { GOOGLE_BASE_URL, HUBSPOT_BASE_URL } = require("../utils/baseUrl");
 
 var google_key = "";
 var sheet_id = "";
@@ -13,12 +13,10 @@ getSpreadsheetValues = async function (req, res) {
         res.redirect("/");
         return;
     }
-    sheet_id = req.body.spreadsheet; //process.env.SPREADSHEET_ID;
-    google_key = req.body.googleKey; //process.env.GOOGLE_API_KEY;
+    sheet_id = req.body.spreadsheet;
+    google_key = req.body.googleKey;
     hub_token = req.body.hubspotToken;
     var contacts = [];
-
-    console.log();
 
 
     await axios.get(`${GOOGLE_BASE_URL}/v4/spreadsheets/${sheet_id}/values/${range}?key=${google_key}`).then(response => {
@@ -37,18 +35,17 @@ getSpreadsheetValues = async function (req, res) {
                 });
             }
             else {
-                console.log("O contato presente na linha " + (i + 1) + " nao possui um email corportativo");
+                console.log("O contato presente na linha " + (i + 1) + " nao possui um email corportativo! Registro ignorado.");
             }
 
         }
 
 
         sendHubspotContact(res, contacts);
-        //res.status(200).redirect("/success");
 
     }).catch(function (error) {
         if (error.request) {
-            console.log(error.request.response);
+            console.log(error.request);
             res.redirect('/error');
         }
         return;
@@ -61,47 +58,61 @@ getSpreadsheetValues = async function (req, res) {
 
 sendHubspotContact = async function (res, list) {
 
-    var token = hub_token; //process.env.HUBSPOT_TOKEN;
+    var token = hub_token;
+    var return_type = 0;
 
-    for (var i = 0; i < list.length; i++) {
+    try {
+        for (var i = 0; i < list.length; i++) {
 
-        const config = {
-            baseURL: "https://api.hubapi.com",
-            method: 'POST',
-            url: '/crm/v3/objects/contacts',
-            data: {
-                properties: list[i]
-            },
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
+            const config = {
+                baseURL: HUBSPOT_BASE_URL,
+                method: 'POST',
+                url: '/crm/v3/objects/contacts',
+                data: {
+                    properties: list[i]
+                },
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+            }
+
+            await axios(config).then(response => {
+                if (response.status === 201) {
+                    console.log("Contato criado com sucesso!");
+                    console.log(list[i]);
+                    return_type = 201;
+                }
+            }).catch(error => {
+                if (error.response.status === 409) {
+                    console.log("Contato já existente!");
+                    console.log(list[i]);
+                    return_type = 409;
+                }
+                else if (error.response.status === 401) {
+                    console.log("unauthorized");
+                    return_type = 401;
+                }
+                else {
+                    console.log("Ocorreu um erro inesperado!");
+                    console.log("Response status=" + error.response.status);
+                    console.log(error.response.statusText);
+                    return_type = error.response.status;
+                }
+
+            })
         }
-
-        await axios(config).then(response => {
-            if (response.status === 201) {
-                console.log("Contato criado com sucesso!");
-                console.log(list[i]);
-            }
-        }).catch(error => {
-            if (error.response.status === 409) {
-                console.log("Contato já existe!");
-                console.log(list[i]);
-            }
-            else if (error.response.status === 401) {
-                res.redirect('/error');
-                return;
-            }
-            else {
-                console.log("Ocorreu um erro inesperado!");
-                console.log("Response status=" + error.response.status);
-                console.log(error.response.statusText);
-            }
-        })
+    } catch (err) {
+        console.log(err);
     }
-
-    res.redirect('/success');
-    return;
+    finally {
+        if(return_type === 201 || return_type === 409){ 
+            return res.redirect('/success');
+        }
+        else{
+            return res.redirect('/error');
+        }
+    }
 }
 
 
