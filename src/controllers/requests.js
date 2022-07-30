@@ -39,20 +39,20 @@ getSpreadsheetValues = async function (req, res) {
             }
 
         }
-
-
         sendHubspotContact(res, contacts);
 
     }).catch(function (error) {
-        if (error.request) {
+        if (error.response) {
+            console.log(error.response.data);
+            console.log(error.response.status);
+        } else if (error.request) {
             console.log(error.request);
-            res.redirect('/error');
+        } else {
+            console.log('Error', error.message);
         }
-        return;
+
+        return res.redirect('/error');
     });
-
-
-
 };
 
 
@@ -60,6 +60,7 @@ sendHubspotContact = async function (res, list) {
 
     var token = hub_token;
     var return_type = 0;
+    var axiosError = {};
 
     try {
         for (var i = 0; i < list.length; i++) {
@@ -84,13 +85,14 @@ sendHubspotContact = async function (res, list) {
                     return_type = 201;
                 }
             }).catch(error => {
+                axiosError = error.response.data;
                 if (error.response.status === 409) {
                     console.log("Contato já existente!");
                     console.log(list[i]);
                     return_type = 409;
                 }
                 else if (error.response.status === 401) {
-                    console.log("unauthorized");
+                    //console.log("unauthorized");
                     return_type = 401;
                 }
                 else {
@@ -106,10 +108,11 @@ sendHubspotContact = async function (res, list) {
         console.log(err);
     }
     finally {
-        if(return_type === 201 || return_type === 409){ 
+        if (return_type === 201 || return_type === 409) {
             return res.redirect('/success');
         }
-        else{
+        else {
+            console.log(axiosError);
             return res.redirect('/error');
         }
     }
